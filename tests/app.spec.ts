@@ -9,11 +9,14 @@ test.describe('Nöbetçi+ Critical Path E2E', () => {
   });
 
   test('User accepts KVKK, shares location, and sees pharmacies', async ({ page }) => {
+    page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
+    page.on('pageerror', err => console.log('BROWSER ERROR:', err.message));
+
     // 1. Navigate to local application
     await page.goto('/');
 
     // 2. Verify Welcome Screen presence
-    const welcomeTitle = page.locator('h1').filter({ hasText: 'Nöbetçi+' });
+    const welcomeTitle = page.locator('h1', { hasText: 'Nöbetçi' }).first();
     await expect(welcomeTitle).toBeVisible();
 
     const acceptButton = page.locator('button', { hasText: /Konum İzni Ver ve Başla/i });

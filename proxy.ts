@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  // Generate a random nonce for scripts
+  // Detect if running on localhost or local network IP to prevent SSL upgrade errors
+  const host = request.headers.get("host") || "";
+  const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1") || host.includes("172.");
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
 
   // CSP directives
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${
-      process.env.NODE_ENV === "development" ? "'unsafe-eval'" : ""
-    };
+    script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: https:;
     font-src 'self' data:;
@@ -20,7 +20,7 @@ export function proxy(request: NextRequest) {
     frame-ancestors 'none';
     connect-src 'self' https://api.open-meteo.com https://date.nager.at;
     block-all-mixed-content;
-    upgrade-insecure-requests;
+    ${isLocalhost ? "" : "upgrade-insecure-requests;"}
   `.replace(/\s{2,}/g, " ").trim();
 
   const requestHeaders = new Headers(request.headers);
