@@ -8,6 +8,7 @@ import AdBanner from "@/components/AdBanner";
 import KvkkBanner from "@/components/KvkkBanner";
 import KvkkModal from "@/components/KvkkModal";
 import OnboardingFlow from "@/components/OnboardingFlow";
+import HealthDashboard from "@/components/HealthDashboard";
 import { MapPin, Navigation, RefreshCw, Compass, AlertTriangle, ShieldCheck, Glasses } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -263,6 +264,11 @@ export default function Home() {
           <div className="my-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-center">
             <p className="text-xs text-red-400 font-semibold">{error}</p>
           </div>
+        )}
+
+        {/* Health, Weather, and Holiday Dashboard */}
+        {userCoords.lat && userCoords.lng && !elderMode && (
+           <HealthDashboard latitude={userCoords.lat} longitude={userCoords.lng} />
         )}
 
         {/* Pharmacy Cards List */}
