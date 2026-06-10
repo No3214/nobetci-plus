@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
             id: item.id as string,
             pharmacy_id: item.pharmacy_id as string,
             pharmacy_name: (ph?.name as string) ?? "Bilinmeyen Eczane",
-            report_type: item.report_type as string,
+            report_type: item.report_type as "wrong_location" | "wrong_phone" | "closed" | "wrong_address" | "other",
             message: item.message as string | undefined,
             user_latitude: item.user_latitude as number | undefined,
             user_longitude: item.user_longitude as number | undefined,
