@@ -1,0 +1,235 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
+import { Report } from "@/types/pharmacy";
+
+interface ReportDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  pharmacyId: string;
+  pharmacyName: string;
+}
+
+const REPORT_TYPES = [
+  { value: "wrong_location", label: "📍 Konum Yanlış / Farklı Yerde" },
+  { value: "wrong_phone", label: "📞 Telefon Numarası Yanlış" },
+  { value: "closed", label: "🔒 Eczane Kapalı / Nöbetçi Değil" },
+  { value: "wrong_address", label: "📝 Adres Eksik / Hatalı" },
+  { value: "other", label: "❓ Diğer Sorun" }
+];
+
+export default function ReportDialog({
+  isOpen,
+  onClose,
+  pharmacyId,
+  pharmacyName
+}: ReportDialogProps) {
+  const [reportType, setReportType] = useState<string>("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [coords, setCoords] = useState<{ lat?: number; lng?: number }>({});
+
+  useEffect(() => {
+    // Attempt to grab current coordinates silently for admin validation
+    if (isOpen && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCoords({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          });
+        },
+        () => {},
+        { enableHighAccuracy: true }
+      );
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setReportType("");
+      setMessage("");
+      setIsSuccess(false);
+      setIsSubmitting(false);
+      // Disable background scroll
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportType) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        pharmacy_id: pharmacyId,
+        pharmacy_name: pharmacyName,
+        report_type: reportType,
+        message: message.trim(),
+        user_latitude: coords.lat,
+        user_longitude: coords.lng
+      };
+
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          onClose();
+        }, 1800);
+      } else {
+        alert("Bildirim gönderilemedi: " + (data.error || "Bilinmeyen Hata"));
+      }
+    } catch (err) {
+      console.error("Submit report error:", err);
+      alert("Bir internet bağlantı hatası oluştu.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+          />
+
+          {/* Modal Container */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md overflow-hidden rounded-3xl bg-neutral-900 text-white border border-neutral-800 shadow-2xl"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-neutral-800 bg-neutral-900/50 px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-emerald-400" />
+                  <h3 className="font-bold text-sm text-neutral-100">Sorun Bildir</h3>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="rounded-full bg-neutral-800 p-1 text-neutral-400 hover:bg-neutral-700 hover:text-white transition"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {isSuccess ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", damping: 12 }}
+                  >
+                    <CheckCircle2 className="h-16 w-16 text-emerald-400" />
+                  </motion.div>
+                  <h4 className="mt-4 text-lg font-bold">Bildiriminiz Alındı</h4>
+                  <p className="mt-2 text-xs text-neutral-400 max-w-xs">
+                    Geri bildiriminiz için teşekkürler! Harita koordinatları ve bilgiler en kısa sürede doğrulanacaktır.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="p-6">
+                  <p className="text-xs text-neutral-400 mb-4">
+                    <span className="font-semibold text-emerald-400">{pharmacyName}</span> hakkında hatalı olan bilgiyi seçip detaylı bilgi ekleyebilirsiniz.
+                  </p>
+
+                  {/* Options */}
+                  <div className="space-y-2.5">
+                    {REPORT_TYPES.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className={`flex items-center gap-3 rounded-2xl border p-3.5 cursor-pointer transition ${
+                          reportType === opt.value
+                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-300 font-semibold"
+                            : "border-neutral-800 bg-neutral-800/40 hover:bg-neutral-800 text-neutral-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="reportType"
+                          value={opt.value}
+                          checked={reportType === opt.value}
+                          onChange={(e) => setReportType(e.target.value)}
+                          className="sr-only"
+                        />
+                        <span className="text-sm">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Extra explanation */}
+                  {reportType && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-4"
+                    >
+                      <label className="block text-xs font-semibold text-neutral-400 mb-1.5">
+                        Açıklama (İsteğe bağlı)
+                      </label>
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Örn: Eczane arka sokakta kalıyor, telefon meşgul çalıyor vb."
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-800 p-3 text-xs text-white placeholder-neutral-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        rows={3}
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      disabled={isSubmitting}
+                      className="flex-1 rounded-xl bg-neutral-800 py-3 text-sm font-semibold text-neutral-300 hover:bg-neutral-700 transition"
+                    >
+                      Kapat
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!reportType || isSubmitting}
+                      className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-500 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Gönderiliyor...
+                        </>
+                      ) : (
+                        "Bildir"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}

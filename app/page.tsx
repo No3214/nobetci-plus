@@ -1,65 +1,396 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Pharmacy } from "@/types/pharmacy";
+import PharmacyCard from "@/components/PharmacyCard";
+import CityDistrictPicker from "@/components/CityDistrictPicker";
+import EmergencyCard from "@/components/EmergencyCard";
+import AdBanner from "@/components/AdBanner";
+import KvkkBanner from "@/components/KvkkBanner";
+import KvkkModal from "@/components/KvkkModal";
+import WelcomeScreen from "@/components/WelcomeScreen";
+import { MapPin, Navigation, RefreshCw, Compass, AlertTriangle, ShieldCheck, Glasses } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Geolocation states
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "requesting" | "granted" | "denied">("idle");
+  const [userCoords, setUserCoords] = useState<{ lat?: number; lng?: number }>({});
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [elderMode, setElderMode] = useState(false);
+  const [isKvkkOpen, setIsKvkkOpen] = useState(false);
+  const [consentGranted, setConsentGranted] = useState<boolean | null>(null);
+  
+  // Selected area fallback states
+  const [selectedArea, setSelectedArea] = useState<{ city: string; district: string } | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
+
+  const fetchAddressName = async (lat: number, lng: number) => {
+    setAddressLoading(true);
+    try {
+      const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+      const resData = await res.json();
+      if (resData.success) {
+        setResolvedAddress(resData.address);
+      } else {
+        setResolvedAddress(null);
+      }
+    } catch (err) {
+      console.error("Geocoding lookup failed:", err);
+      setResolvedAddress(null);
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  // Trigger Geolocation request
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus("denied");
+      setError("Tarayıcınız konum özelliğini desteklemiyor.");
+      setShowPicker(true);
+      return;
+    }
+
+    setGpsStatus("requesting");
+    setLoading(true);
+    setError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setUserCoords({ lat, lng });
+        setGpsStatus("granted");
+        fetchPharmacies(lat, lng);
+        fetchAddressName(lat, lng);
+      },
+      (err) => {
+        console.warn("Geolocation error:", err);
+        setGpsStatus("denied");
+        setLoading(false);
+        setShowPicker(true);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
+  // Fetch pharmacies from local API
+  const fetchPharmacies = async (lat?: number, lng?: number, city?: string, district?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      let url = "/api/pharmacies?";
+      if (lat && lng) {
+        url += `lat=${lat}&lng=${lng}`;
+      } else if (city && district) {
+        url += `city=${encodeURIComponent(city)}&district=${encodeURIComponent(district)}`;
+      }
+
+      const res = await fetch(url);
+      const resData = await res.json();
+
+      if (resData.success) {
+        setPharmacies(resData.data);
+      } else {
+        setError(resData.error || "Eczaneler çekilemedi.");
+      }
+    } catch (err) {
+      console.error("Fetch pharmacies error:", err);
+      setError("İnternet bağlantı hatası. Eczane bilgileri yüklenemedi.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check consent on page mount
+  useEffect(() => {
+    const consent = localStorage.getItem("nobetci-kvkk-consent");
+    if (consent === "true") {
+      setConsentGranted(true);
+      requestLocation();
+    } else {
+      setConsentGranted(false);
+    }
+  }, []);
+
+  const handleAcceptGps = () => {
+    localStorage.setItem("nobetci-kvkk-consent", "true");
+    setConsentGranted(true);
+    requestLocation();
+  };
+
+  const handleContinueManual = () => {
+    localStorage.setItem("nobetci-kvkk-consent", "true");
+    setConsentGranted(true);
+    setGpsStatus("denied");
+    setShowPicker(true);
+  };
+
+  const handleManualSearch = (city: string, district: string) => {
+    setSelectedArea({ city, district });
+    setUserCoords({}); // Clear GPS coordinates to bypass distance sorting based on GPS
+    setShowPicker(false);
+    fetchPharmacies(undefined, undefined, city, district);
+  };
+
+  if (consentGranted === null) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-800 border-t-emerald-500" />
+      </div>
+    );
+  }
+
+  if (consentGranted === false) {
+    return (
+      <>
+        <WelcomeScreen
+          onAcceptGps={handleAcceptGps}
+          onContinueManual={handleContinueManual}
+          onOpenPrivacy={() => setIsKvkkOpen(true)}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        <KvkkModal isOpen={isKvkkOpen} onClose={() => setIsKvkkOpen(false)} />
+      </>
+    );
+  }
+
+  return (
+    <div className="flex flex-col flex-grow items-center bg-background px-4 pb-12 pt-6 font-sans">
+      <main className="w-full max-w-md flex flex-col flex-grow">
+        
+        {/* Header Branding */}
+        <header className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center h-10 w-10 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-900/30">
+              <span className="text-xl font-bold text-white leading-none">+</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-neutral-100 flex items-center gap-1.5">
+                Nöbetçi<span className="text-emerald-500 font-extrabold">+</span>
+              </h1>
+              <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest leading-none">
+                Sade & Reklamsız
+              </p>
+            </div>
+          </div>
+
+          {/* Action Header Button */}
+          <div className="flex items-center gap-2">
+            {/* Elder Mode Toggle */}
+            <button
+              onClick={() => setElderMode(!elderMode)}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 border ${
+                elderMode
+                  ? "bg-white text-black border-black font-black"
+                  : "bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300"
+              }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <Glasses className="h-4 w-4 shrink-0" />
+              {elderMode ? "Standart Mod" : "Büyük Yazı"}
+            </button>
+
+            {gpsStatus === "granted" && (
+              <button
+                onClick={requestLocation}
+                disabled={loading}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 border ${
+                  elderMode
+                    ? "bg-black text-white border-white font-black"
+                    : "bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300"
+                }`}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-emerald-400" : ""}`} />
+                Yenile
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* GPS Prompt / Status Messaging */}
+        <div className="mb-5">
+          {gpsStatus === "requesting" && (
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4 text-center animate-pulse-slow">
+              <Compass className="mx-auto h-7 w-7 text-emerald-500 animate-spin" />
+              <p className="mt-2 text-xs font-semibold text-neutral-300">
+                Konumunuz alınıyor...
+              </p>
+              <p className="mt-0.5 text-[10px] text-neutral-500">
+                En yakın nöbetçi eczaneleri sıralamak için konum izni gereklidir.
+              </p>
+            </div>
+          )}
+
+          {gpsStatus === "denied" && !selectedArea && (
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-center">
+              <div className="flex justify-center mb-1">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              </div>
+              <h4 className="text-xs font-bold text-amber-200">Konum İzni Alınamadı</h4>
+              <p className="mt-1 text-[11px] text-neutral-400 leading-normal">
+                En yakın eczaneleri görmek için cihazınızdan konum izni verin veya aşağıdaki formdan il/ilçe seçin.
+              </p>
+              <button
+                onClick={requestLocation}
+                className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300"
+              >
+                Konum İznini Yeniden Dene →
+              </button>
+            </div>
+          )}
+
+          {gpsStatus === "granted" && (
+            <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-3 text-center flex flex-col items-center justify-center gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-emerald-400 animate-pulse" />
+                <span className="text-[11px] font-bold text-emerald-300">
+                  Konuma Göre Sıralandı (En Yakın 3 Eczane)
+                </span>
+              </div>
+              {addressLoading ? (
+                <span className="text-[9px] text-neutral-500 font-semibold animate-pulse">Konum adı çözülüyor...</span>
+              ) : resolvedAddress ? (
+                <span className="text-[10px] text-neutral-400 font-medium leading-relaxed">
+                  📍 {resolvedAddress}
+                </span>
+              ) : null}
+            </div>
+          )}
+
+          {selectedArea && !gpsStatus.includes("granted") && (
+            <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3.5 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">
+                  Seçilen Bölge
+                </span>
+                <span className="text-xs font-bold text-neutral-200">
+                  {selectedArea.city} / {selectedArea.district}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowPicker(true)}
+                className="rounded-xl border border-neutral-800 bg-neutral-800/60 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition"
+              >
+                Değiştir
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Loading Spinner */}
+        {loading && pharmacies.length === 0 && (
+          <div className="flex flex-grow flex-col items-center justify-center py-20">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-800 border-t-emerald-500" />
+            <p className="mt-4 text-xs font-semibold text-neutral-400">Yükleniyor...</p>
+          </div>
+        )}
+
+        {/* Error Notification */}
+        {error && (
+          <div className="my-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-center">
+            <p className="text-xs text-red-400 font-semibold">{error}</p>
+          </div>
+        )}
+
+        {/* Pharmacy Cards List */}
+        <div className="space-y-4 flex-grow">
+          {pharmacies.slice(0, 3).map((pharmacy, index) => (
+            <motion.div
+              key={pharmacy.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
             >
-              Learning
-            </a>{" "}
-            center.
+              <PharmacyCard pharmacy={pharmacy} index={index} elderMode={elderMode} />
+            </motion.div>
+          ))}
+
+          {/* Empty state when no pharmacies found */}
+          {!loading && pharmacies.length === 0 && !error && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="text-sm font-semibold text-neutral-400">
+                Hiç nöbetçi eczane bulunamadı.
+              </p>
+              <p className="mt-1 text-xs text-neutral-500 max-w-xs">
+                Lütfen konum izni verdiğinizden emin olun veya üstteki menüden başka bir il/ilçe arayın.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Google AdSense or Custom Sponsorship Banner */}
+        <div className="mt-6">
+          <AdBanner slot="1234567890" />
+        </div>
+
+        {/* Emergency Info Hub */}
+        <div className="mt-4">
+          <EmergencyCard />
+        </div>
+
+        {/* Action picker toggles / forms */}
+        <div className="mt-6 space-y-4">
+          {/* Toggle Button for manual picker */}
+          {!showPicker && (
+            <button
+              onClick={() => setShowPicker(true)}
+              className="w-full py-4 rounded-2xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-xs font-bold text-neutral-300 hover:text-white transition flex items-center justify-center gap-2"
+            >
+              <MapPin className="h-4 w-4 text-emerald-400" /> Başka Bir İl / İlçe Ara
+            </button>
+          )}
+
+          {/* City / District form picker */}
+          <AnimatePresence>
+            {showPicker && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+              >
+                <CityDistrictPicker
+                  onSelect={handleManualSearch}
+                  defaultCity={selectedArea?.city}
+                  defaultDistrict={selectedArea?.district}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPicker(false)}
+                  className="mt-2.5 w-full text-center text-xs font-semibold text-neutral-500 hover:text-neutral-400 py-1"
+                >
+                  Kapat
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Brand Footer */}
+        <footer className="mt-10 text-center">
+          <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
+            Nöbetçi+ © 2026
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <p className="mt-1 text-[9px] text-neutral-500">
+            Resmi kaynaklardan anlık olarak derlenmektedir. Reklam barındırmaz.
+          </p>
+          <button
+            onClick={() => setIsKvkkOpen(true)}
+            className="text-[9px] text-neutral-500 hover:text-emerald-400 hover:underline transition font-bold uppercase tracking-wider block mx-auto mt-2.5"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            Gizlilik Politikası & KVKK Aydınlatma
+          </button>
+        </footer>
+
       </main>
+
+      {/* KVKK Overlays */}
+      <KvkkBanner />
+      <KvkkModal isOpen={isKvkkOpen} onClose={() => setIsKvkkOpen(false)} />
     </div>
   );
 }
