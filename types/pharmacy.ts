@@ -10,6 +10,7 @@ export interface Pharmacy {
   distance?: number; // Calculated distance in km
   confidence_score?: number; // Accuracy level out of 100
   updated_at?: string; // Last updated timestamp
+  surplus_items?: { id: string; name: string; discount_badge?: string; price?: string }[];
 }
 
 export interface Report {

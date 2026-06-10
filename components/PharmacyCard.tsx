@@ -179,6 +179,42 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
         </div>
       )}
 
+      {/* Surplus Items & Discount Commission Block */}
+      {!elderMode && pharmacy.surplus_items && pharmacy.surplus_items.length > 0 && (
+        <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 overflow-hidden relative">
+          <div className="absolute -right-4 -top-4 w-12 h-12 bg-emerald-500/20 blur-xl rounded-full pointer-events-none" />
+          <h4 className="text-[11px] font-black text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <span>🎉 Özel Nöbetçi+ İndirimleri</span>
+          </h4>
+          <div className="space-y-2">
+            {pharmacy.surplus_items.map((item) => (
+              <div key={item.id} className="flex items-center justify-between bg-neutral-950/60 rounded-lg p-2 border border-neutral-800/50">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-neutral-200">{item.name}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {item.discount_badge && (
+                      <span className="text-[9px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-sm">
+                        {item.discount_badge}
+                      </span>
+                    )}
+                    {item.price && <span className="text-[10px] font-mono text-emerald-400">{item.price}</span>}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const text = encodeURIComponent(`Merhaba, Nöbetçi+ uygulamanızdaki indirimli "${item.name}" (${item.price}) için ulaşıyorum. Nöbetçi+ İndirim Kodum: NBT-123. Üründen benim adıma 1 adet ayırabilir misiniz?`);
+                    window.open(`https://wa.me/${normalizePhone(pharmacy.phone)}?text=${text}`, '_blank');
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-md transition shadow-md shadow-emerald-900/30"
+                >
+                  İndirimli Al
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Last Updated Status */}
       <div className={`mt-2 font-bold flex items-center gap-1 ${
         elderMode ? "text-xs text-neutral-300" : "text-[10px] text-neutral-500"

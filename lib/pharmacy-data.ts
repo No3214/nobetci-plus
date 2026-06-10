@@ -90,11 +90,6 @@ export function generateMockPharmacies(
     const pLng = baseLng + lngOffset;
     
     // Last update should be recent (within the last hour)
-    const now = new Date();
-    const updateMinute = Math.floor(Math.random() * 45);
-    now.setMinutes(now.getMinutes() - updateMinute);
-    const updatedStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-
     return {
       id: `pharmacy-${resolvedCity}-${resolvedDistrict}-${idx}`,
       name: `${getRandomItem(PHARMACY_NAMES)} Eczanesi`,
