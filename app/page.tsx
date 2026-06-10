@@ -9,6 +9,7 @@ import KvkkBanner from "@/components/KvkkBanner";
 import KvkkModal from "@/components/KvkkModal";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HealthDashboard from "@/components/HealthDashboard";
+import MedicationReminder from "@/components/MedicationReminder";
 import { MapPin, Navigation, RefreshCw, Compass, AlertTriangle, ShieldCheck, Glasses } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -270,6 +271,9 @@ export default function Home() {
         {userCoords.lat && userCoords.lng && !elderMode && (
            <HealthDashboard latitude={userCoords.lat} longitude={userCoords.lng} />
         )}
+
+        {/* Medication Reminder */}
+        {!elderMode && <MedicationReminder />}
 
         {/* Pharmacy Cards List */}
         <div className="space-y-4 flex-grow">

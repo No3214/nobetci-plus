@@ -1,17 +1,16 @@
 {
-  "name": "Nöbetçi+ | Reklamsız Eczane Bulucu",
+  "name": "Nöbetçi+ Eczane",
   "short_name": "Nöbetçi+",
-  "description": "Konumunuza en yakın nöbetçi eczaneleri saniyeler içinde listeleyen reklamsız bulucu.",
+  "description": "Sade, akıllı ve hızlı nöbetçi eczane asistanı.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#060807",
-  "theme_color": "#060807",
-  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#10b981",
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "/icon.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
