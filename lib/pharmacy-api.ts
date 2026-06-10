@@ -106,7 +106,11 @@ export async function fetchCollectAPILivePharmacies(
       }
     );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => "Unknown error body");
+      console.warn(`CollectAPI returned error status: ${res.status}. Response: ${errorText}`);
+      return [];
+    }
 
     const data = await res.json();
     const parsed = CollectApiResponseSchema.safeParse(data);

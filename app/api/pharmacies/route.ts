@@ -1,20 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { generateMockPharmacies } from "@/lib/pharmacy-data";
 import { calculateDistanceKm } from "@/lib/distance";
 import { Pharmacy } from "@/types/pharmacy";
 import { fetchLiveIzmirPharmacies, fetchCollectAPILivePharmacies } from "@/lib/pharmacy-api";
 
+const QuerySchema = z.object({
+  lat: z.string().optional().nullable().transform(val => val ? parseFloat(val) : undefined).refine(val => val === undefined || (!isNaN(val) && val >= -90 && val <= 90), "Geçersiz enlem (lat)"),
+  lng: z.string().optional().nullable().transform(val => val ? parseFloat(val) : undefined).refine(val => val === undefined || (!isNaN(val) && val >= -180 && val <= 180), "Geçersiz boylam (lng)"),
+  city: z.string().optional().nullable().transform(val => val || undefined),
+  district: z.string().optional().nullable().transform(val => val || undefined),
+});
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const latParam = searchParams.get("lat");
-    const lngParam = searchParams.get("lng");
-    const city = searchParams.get("city");
-    const district = searchParams.get("district");
+    const parsedParams = QuerySchema.safeParse({
+      lat: searchParams.get("lat"),
+      lng: searchParams.get("lng"),
+      city: searchParams.get("city"),
+      district: searchParams.get("district"),
+    });
 
-    const lat: number | undefined = latParam ? parseFloat(latParam) : undefined;
-    const lng: number | undefined = lngParam ? parseFloat(lngParam) : undefined;
+    if (!parsedParams.success) {
+      return NextResponse.json({ success: false, error: "Geçersiz parametreler", details: parsedParams.error.format() }, { status: 400 });
+    }
+
+    const { lat, lng, city, district } = parsedParams.data;
 
     let pharmacies: Pharmacy[] = [];
 
@@ -100,7 +113,15 @@ export async function GET(request: NextRequest) {
       }));
     }
 
-    return NextResponse.json({ success: true, data: pharmacies });
+    return NextResponse.json(
+      { success: true, data: pharmacies },
+      { 
+        status: 200,
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=59" // ECC: Edge Cache Control (5 mins)
+        }
+      }
+    );
   } catch (error: unknown) {
     console.error("Error in /api/pharmacies GET:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

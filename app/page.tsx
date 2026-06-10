@@ -12,17 +12,23 @@ import HealthDashboard from "@/components/HealthDashboard";
 import MedicationReminder from "@/components/MedicationReminder";
 import { MapPin, Navigation, RefreshCw, Compass, AlertTriangle, ShieldCheck, Glasses } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGeolocation } from "@/lib/hooks/useGeolocation";
+import { usePharmacies } from "@/lib/hooks/usePharmacies";
 
 export default function Home() {
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { pharmacies, loading, error, fetchPharmacies } = usePharmacies();
   
-  // Geolocation states
-  const [gpsStatus, setGpsStatus] = useState<"idle" | "requesting" | "granted" | "denied">("idle");
-  const [userCoords, setUserCoords] = useState<{ lat?: number; lng?: number }>({});
-  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
-  const [addressLoading, setAddressLoading] = useState(false);
+  // Geolocation states from custom hook
+  const {
+    gpsStatus,
+    setGpsStatus,
+    userCoords,
+    clearCoords,
+    resolvedAddress,
+    addressLoading,
+    requestLocation
+  } = useGeolocation();
+
   const [elderMode, setElderMode] = useState(false);
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
   const [isAppReady, setIsAppReady] = useState(false);
@@ -31,82 +37,12 @@ export default function Home() {
   const [selectedArea, setSelectedArea] = useState<{ city: string; district: string } | null>(null);
   const [showPicker, setShowPicker] = useState(false);
 
-  const fetchAddressName = async (lat: number, lng: number) => {
-    setAddressLoading(true);
-    try {
-      const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
-      const resData = await res.json();
-      if (resData.success) {
-        setResolvedAddress(resData.address);
-      } else {
-        setResolvedAddress(null);
-      }
-    } catch (err) {
-      console.error("Geocoding lookup failed:", err);
-      setResolvedAddress(null);
-    } finally {
-      setAddressLoading(false);
-    }
-  };
-
-  // Trigger Geolocation request
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      setGpsStatus("denied");
-      setError("Tarayıcınız konum özelliğini desteklemiyor.");
-      setShowPicker(true);
-      return;
-    }
-
-    setGpsStatus("requesting");
-    setLoading(true);
-    setError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setUserCoords({ lat, lng });
-        setGpsStatus("granted");
-        fetchPharmacies(lat, lng);
-        fetchAddressName(lat, lng);
-      },
-      (err) => {
-        console.warn("Geolocation error:", err);
-        setGpsStatus("denied");
-        setLoading(false);
-        setShowPicker(true);
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
+  // Wrapper for requestLocation to also fetch pharmacies
+  const handleRequestLocation = () => {
+    requestLocation(
+      (lat, lng) => fetchPharmacies(lat, lng), // onSuccess
+      () => setShowPicker(true) // onError
     );
-  };
-
-  // Fetch pharmacies from local API
-  const fetchPharmacies = async (lat?: number, lng?: number, city?: string, district?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      let url = "/api/pharmacies?";
-      if (lat && lng) {
-        url += `lat=${lat}&lng=${lng}`;
-      } else if (city && district) {
-        url += `city=${encodeURIComponent(city)}&district=${encodeURIComponent(district)}`;
-      }
-
-      const res = await fetch(url);
-      const resData = await res.json();
-
-      if (resData.success) {
-        setPharmacies(resData.data);
-      } else {
-        setError(resData.error || "Eczaneler çekilemedi.");
-      }
-    } catch (err) {
-      console.error("Fetch pharmacies error:", err);
-      setError("İnternet bağlantı hatası. Eczane bilgileri yüklenemedi.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleOnboardingComplete = (useGps: boolean) => {
@@ -121,7 +57,7 @@ export default function Home() {
 
   const handleManualSearch = (city: string, district: string) => {
     setSelectedArea({ city, district });
-    setUserCoords({}); // Clear GPS coordinates to bypass distance sorting based on GPS
+    clearCoords(); // Clear GPS coordinates to bypass distance sorting based on GPS
     setShowPicker(false);
     fetchPharmacies(undefined, undefined, city, district);
   };
@@ -167,7 +103,7 @@ export default function Home() {
 
             {gpsStatus === "granted" && (
               <button
-                onClick={requestLocation}
+                onClick={handleRequestLocation}
                 disabled={loading}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 border ${
                   elderMode
@@ -206,7 +142,7 @@ export default function Home() {
                 En yakın eczaneleri görmek için cihazınızdan konum izni verin veya aşağıdaki formdan il/ilçe seçin.
               </p>
               <button
-                onClick={requestLocation}
+                onClick={handleRequestLocation}
                 className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300"
               >
                 Konum İznini Yeniden Dene →
