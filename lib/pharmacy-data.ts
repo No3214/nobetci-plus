@@ -100,7 +100,11 @@ export function generateMockPharmacies(
       latitude: pLat,
       longitude: pLng,
       confidence_score: 85 + Math.floor(Math.random() * 15), // 85-100% confidence
-      updated_at: updatedStr
+      updated_at: new Date(Date.now() - Math.floor(Math.random() * 10000000)).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+      surplus_items: Math.random() > 0.5 ? [
+        { id: `sp-${Math.random()}`, name: "La Roche-Posay Güneş Kremi 50+", discount_badge: "%20 Özel Nöbetçi+ İndirimi", price: "599 TL" },
+        { id: `sp-${Math.random()}`, name: "Solgar Vitamin C 1000mg", discount_badge: "Stokta", price: "450 TL" }
+      ] : undefined
     };
   });
 }
