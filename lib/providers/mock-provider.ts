@@ -6,7 +6,7 @@ export class MockProvider implements PharmacyProvider {
   name = "mock";
   priority = 100; // Last resort
 
-  canHandle(): boolean {
+  canHandle(input: PharmacyProviderInput): boolean {
     return true; // Always handles as a last resort fallback
   }
 

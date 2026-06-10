@@ -18,8 +18,10 @@ export class IzmirProvider implements PharmacyProvider {
   priority = 10; // Highest priority for official free data
 
   canHandle(input: PharmacyProviderInput): boolean {
-    // Handle if city is Izmir, or if coordinates are roughly within Izmir bounds
-    if (input.city && input.city.toLocaleLowerCase("tr-TR") === "i̇zmir" || input.city?.toLowerCase() === "izmir") return true;
+    if (input.city) {
+      const city = input.city.toLocaleLowerCase("tr-TR").trim().normalize("NFC");
+      if (city === "izmir" || city === "i̇zmir".normalize("NFC")) return true;
+    }
     
     if (input.lat && input.lng) {
       // Rough bounding box for Izmir province
