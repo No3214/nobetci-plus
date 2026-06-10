@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { IzmirProvider } from "../providers/izmir-provider";
 import { CollectApiProvider } from "../providers/collectapi-provider";
 import { SupabaseProvider } from "../providers/supabase-provider";

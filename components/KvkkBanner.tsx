@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, ShieldAlert } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import KvkkModal from "./KvkkModal";
 
 export default function KvkkBanner() {

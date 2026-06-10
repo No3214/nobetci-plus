@@ -75,7 +75,7 @@ export default function KvkkModal({ isOpen, onClose }: KvkkModalProps) {
 
                 <p className="font-bold text-neutral-200">4. Çerezler (Cookies) ve Yerel Depolama</p>
                 <p>
-                  Uygulama, yalnızca kullanıcı tercihlerini (örneğin seçtiğiniz il/ilçe ve "Büyük Yazı/Elder Mode" tercihiniz) saklamak için yerel tarayıcı hafızasını (localStorage) kullanmaktadır. Bu çerezler reklam veya profil çıkarma amacı taşımamaktadır.
+                  Uygulama, yalnızca kullanıcı tercihlerini (örneğin seçtiğiniz il/ilçe ve &quot;Büyük Yazı/Elder Mode&quot; tercihiniz) saklamak için yerel tarayıcı hafızasını (localStorage) kullanmaktadır. Bu çerezler reklam veya profil çıkarma amacı taşımamaktadır.
                 </p>
 
                 <p className="font-bold text-neutral-200">5. Sorumluluk Muafiyeti ve Yasal Uyarı</p>

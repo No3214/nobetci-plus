@@ -103,4 +103,28 @@ describe("/api/reports Route", () => {
       expect(body.error).toContain("Geçersiz enlem");
     });
   });
+
+  describe("PUT", () => {
+    it("returns 401 for unauthorized updates", async () => {
+      process.env.ADMIN_SECRET_KEY = "super-secret";
+      const req = new NextRequest("http://localhost/api/reports", {
+        method: "PUT",
+        headers: { "x-admin-key": "wrong-key" },
+        body: JSON.stringify({ id: "test-id", status: "resolved" })
+      });
+      const res = await PUT(req);
+      expect(res.status).toBe(401);
+    });
+
+    it("returns 400 for missing id or status", async () => {
+      process.env.ADMIN_SECRET_KEY = "super-secret";
+      const req = new NextRequest("http://localhost/api/reports", {
+        method: "PUT",
+        headers: { "x-admin-key": "super-secret" },
+        body: JSON.stringify({ id: "test-id" })
+      });
+      const res = await PUT(req);
+      expect(res.status).toBe(400);
+    });
+  });
 });

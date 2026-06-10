@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pharmacy } from "@/types/pharmacy";
 import { formatDistance } from "@/lib/distance";
 import { getPhoneUrl, getWhatsappUrl, normalizePhone } from "@/lib/phone";
-import { Phone, MessageCircle, MapPin, AlertTriangle, ShieldCheck, Navigation, Clock, Share2 } from "lucide-react";
+import { Phone, MessageCircle, MapPin, AlertTriangle, Navigation, Clock, Share2 } from "lucide-react";
 import MapChoiceSheet from "@/components/MapChoiceSheet";
 import ReportDialog from "@/components/ReportDialog";
 
@@ -85,13 +85,6 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
         alert("Kopyalanamadı.");
       }
     }
-  };
-
-  // Confidence level colors
-  const getConfidenceColor = (score: number) => {
-    if (score >= 95) return "text-emerald-400 bg-emerald-500/10";
-    if (score >= 85) return "text-teal-400 bg-teal-500/10";
-    return "text-amber-400 bg-amber-500/10";
   };
 
   return (

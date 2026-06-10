@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, MapPin, Navigation, Sparkles, ArrowRight, ShieldAlert } from "lucide-react";
+import { ShieldCheck, MapPin, Navigation, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface WelcomeScreenProps {

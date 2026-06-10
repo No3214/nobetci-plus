@@ -13,15 +13,17 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("nobetci-kvkk-consent");
-    if (consent === "true") {
-      setConsentGranted(true);
-      onComplete(true); // Default to attempting GPS if already consented
-    } else {
-      setConsentGranted(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const frameId = requestAnimationFrame(() => {
+      const consent = localStorage.getItem("nobetci-kvkk-consent");
+      if (consent === "true") {
+        setConsentGranted(true);
+        onComplete(true); // Default to attempting GPS if already consented
+      } else {
+        setConsentGranted(false);
+      }
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [onComplete]);
 
   const handleAcceptGps = () => {
     localStorage.setItem("nobetci-kvkk-consent", "true");

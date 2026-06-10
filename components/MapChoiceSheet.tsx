@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, X } from "lucide-react";
+import { Navigation, X } from "lucide-react";
 import { getGoogleMapsUrl, getAppleMapsUrl, getYandexMapsUrl } from "@/lib/maps";
 import { isIOS } from "@/lib/device";
 
@@ -24,7 +24,10 @@ export default function MapChoiceSheet({
   const [deviceIsIos, setDeviceIsIos] = useState(false);
 
   useEffect(() => {
-    setDeviceIsIos(isIOS());
+    const frameId = requestAnimationFrame(() => {
+      setDeviceIsIos(isIOS());
+    });
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   // Closes the sheet on pressing Escape

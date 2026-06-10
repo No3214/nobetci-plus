@@ -1,17 +1,50 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, Loader2 } from "lucide-react";
+
+interface SpeechRecognitionResult {
+  [index: number]: {
+    transcript: string;
+  };
+}
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: {
+    [index: number]: SpeechRecognitionResult;
+  };
+}
+
+interface SpeechRecognitionError {
+  error: string;
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionError) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
 
 export default function VoiceAssistant() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(true);
-  const [speechRecognition, setSpeechRecognition] = useState<any>(null);
+  const [speechRecognition, setSpeechRecognition] = useState<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const win = window as unknown as {
+        SpeechRecognition?: new () => SpeechRecognitionInstance;
+        webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+      };
+      const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
@@ -22,7 +55,7 @@ export default function VoiceAssistant() {
           setIsListening(true);
         };
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
           const current = event.resultIndex;
           const transcriptResult = event.results[current][0].transcript;
           setTranscript(transcriptResult);
@@ -34,7 +67,7 @@ export default function VoiceAssistant() {
           }, 500);
         };
 
-        recognition.onerror = (event: any) => {
+        recognition.onerror = (event: SpeechRecognitionError) => {
           console.error("Speech recognition error", event.error);
           setIsListening(false);
         };
@@ -43,9 +76,15 @@ export default function VoiceAssistant() {
           setIsListening(false);
         };
 
-        setSpeechRecognition(recognition);
+        const frameId = requestAnimationFrame(() => {
+          setSpeechRecognition(recognition);
+        });
+        return () => cancelAnimationFrame(frameId);
       } else {
-        setIsSupported(false);
+        const frameId = requestAnimationFrame(() => {
+          setIsSupported(false);
+        });
+        return () => cancelAnimationFrame(frameId);
       }
     }
   }, []);
@@ -64,7 +103,7 @@ export default function VoiceAssistant() {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
       {transcript && (
         <div className="bg-neutral-900 border border-neutral-700 text-white text-xs px-3 py-2 rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2">
-          "{transcript}"
+          &quot;{transcript}&quot;
         </div>
       )}
       <button

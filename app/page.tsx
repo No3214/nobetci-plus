@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Pharmacy } from "@/types/pharmacy";
 import PharmacyCard from "@/components/PharmacyCard";
 import CityDistrictPicker from "@/components/CityDistrictPicker";
 import KvkkBanner from "@/components/KvkkBanner";
@@ -9,7 +8,7 @@ import KvkkModal from "@/components/KvkkModal";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HealthDashboard from "@/components/HealthDashboard";
 import DrugProspectus from "@/components/DrugProspectus";
-import { MapPin, Navigation, RefreshCw, Compass, AlertTriangle, ShieldCheck, Glasses } from "lucide-react";
+import { MapPin, RefreshCw, Compass, AlertTriangle, ShieldCheck, Glasses } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGeolocation } from "@/lib/hooks/useGeolocation";
 import { usePharmacies } from "@/lib/hooks/usePharmacies";

@@ -68,18 +68,17 @@ export default function AdminReports() {
     }
   };
 
-  // Load key from sessionStorage on mount
   useEffect(() => {
     const cachedKey = sessionStorage.getItem("nobetci-admin-key");
-    if (cachedKey) {
-      verifyAndFetch(cachedKey);
-    } else {
-      setTimeout(() => {
+    const frameId = requestAnimationFrame(() => {
+      if (cachedKey) {
+        verifyAndFetch(cachedKey);
+      } else {
         setIsAuthenticated(false);
         setLoading(false);
-      }, 0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      }
+    });
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {

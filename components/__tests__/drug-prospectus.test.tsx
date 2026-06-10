@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/* eslint-disable @typescript-eslint/no-explicit-any, react/display-name, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";

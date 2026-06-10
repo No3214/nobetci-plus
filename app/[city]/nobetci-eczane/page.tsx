@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { fromSlug } from "@/lib/slugs";
 import citiesData from "@/data/tr-cities-districts.json";
-import CityDistrictPicker from "@/components/CityDistrictPicker";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 

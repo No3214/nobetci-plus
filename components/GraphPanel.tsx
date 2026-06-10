@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, Users, Map, Car, ShieldAlert } from "lucide-react";
+import { TrendingUp, Users, Car, ShieldAlert } from "lucide-react";
 
 interface GraphPanelProps {
   reportsCount: number;
@@ -10,9 +10,6 @@ interface GraphPanelProps {
 }
 
 export default function GraphPanel({ reportsCount, activeUsers = 124, uberClicks = 42 }: GraphPanelProps) {
-  // Graphify: Data Visualization calculations
-  const totalInteractions = reportsCount + activeUsers + uberClicks;
-  
   // Progress calculations
   const safetyScore = Math.max(0, 100 - (reportsCount * 5));
   const conversionRate = Math.min(100, Math.round((uberClicks / activeUsers) * 100)) || 0;

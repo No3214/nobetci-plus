@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
-import { Report } from "@/types/pharmacy";
 
 interface ReportDialogProps {
   isOpen: boolean;
@@ -58,12 +57,18 @@ export default function ReportDialog({
 
   useEffect(() => {
     if (isOpen) {
-      setReportType("");
-      setMessage("");
-      setIsSuccess(false);
-      setIsSubmitting(false);
+      const frameId = requestAnimationFrame(() => {
+        setReportType("");
+        setMessage("");
+        setIsSuccess(false);
+        setIsSubmitting(false);
+      });
       // Disable background scroll
       document.body.style.overflow = "hidden";
+      return () => {
+        cancelAnimationFrame(frameId);
+        document.body.style.overflow = "unset";
+      };
     }
     return () => {
       document.body.style.overflow = "unset";

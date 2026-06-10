@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import citiesData from "@/data/tr-cities-districts.json";
 import { Search, Map } from "lucide-react";
 
@@ -17,27 +17,25 @@ export default function CityDistrictPicker({
 }: CityDistrictPickerProps) {
   const [selectedCity, setSelectedCity] = useState(defaultCity);
   const [selectedDistrict, setSelectedDistrict] = useState(defaultDistrict);
-  const [districts, setDistricts] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>(() => {
+    if (defaultCity) {
+      const cityData = citiesData.find((c) => c.city === defaultCity);
+      return cityData ? cityData.districts : [];
+    }
+    return [];
+  });
 
-  // Update district options when city changes
-  useEffect(() => {
-    if (selectedCity) {
-      const cityData = citiesData.find((c) => c.city === selectedCity);
-      if (cityData) {
-        setDistricts(cityData.districts);
-        // Clear district if it's not valid for the new city
-        if (!cityData.districts.includes(selectedDistrict)) {
-          setSelectedDistrict("");
-        }
-      } else {
-        setDistricts([]);
-        setSelectedDistrict("");
-      }
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    const cityData = citiesData.find((c) => c.city === city);
+    if (cityData) {
+      setDistricts(cityData.districts);
+      setSelectedDistrict("");
     } else {
       setDistricts([]);
       setSelectedDistrict("");
     }
-  }, [selectedCity, selectedDistrict]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +58,7 @@ export default function CityDistrictPicker({
           </label>
           <select
             value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
+            onChange={(e) => handleCityChange(e.target.value)}
             className="w-full rounded-2xl border border-neutral-800 bg-neutral-800/60 p-3.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 transition"
           >
             <option value="" disabled className="text-neutral-500">
