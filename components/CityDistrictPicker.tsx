@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CITIES_AND_DISTRICTS } from "@/lib/pharmacy-data";
+import citiesData from "@/data/tr-cities-districts.json";
 import { Search, Map } from "lucide-react";
 
 interface CityDistrictPickerProps {
@@ -22,7 +22,7 @@ export default function CityDistrictPicker({
   // Update district options when city changes
   useEffect(() => {
     if (selectedCity) {
-      const cityData = CITIES_AND_DISTRICTS.find((c) => c.name === selectedCity);
+      const cityData = citiesData.find((c) => c.city === selectedCity);
       if (cityData) {
         setDistricts(cityData.districts);
         // Clear district if it's not valid for the new city
@@ -66,9 +66,9 @@ export default function CityDistrictPicker({
             <option value="" disabled className="text-neutral-500">
               İl seçin...
             </option>
-            {CITIES_AND_DISTRICTS.map((city) => (
-              <option key={city.name} value={city.name} className="bg-neutral-900">
-                {city.name}
+            {citiesData.map((city) => (
+              <option key={city.city} value={city.city} className="bg-neutral-900">
+                {city.city}
               </option>
             ))}
           </select>

@@ -9,7 +9,10 @@ const MAX_POST_LIMIT = 5; // max 5 reports per window
 export async function GET(request: NextRequest) {
   try {
     const adminKey = request.headers.get("x-admin-key");
-    const requiredKey = process.env.ADMIN_SECRET_KEY || "nobetci-admin-2026";
+    const requiredKey = process.env.ADMIN_SECRET_KEY;
+    if (!requiredKey) {
+      return NextResponse.json({ success: false, error: "Admin yetkisi yapılandırılmamış." }, { status: 500 });
+    }
     if (adminKey !== requiredKey) {
       return NextResponse.json({ success: false, error: "Yetkisiz erişim." }, { status: 401 });
     }
@@ -135,7 +138,10 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const adminKey = request.headers.get("x-admin-key");
-    const requiredKey = process.env.ADMIN_SECRET_KEY || "nobetci-admin-2026";
+    const requiredKey = process.env.ADMIN_SECRET_KEY;
+    if (!requiredKey) {
+      return NextResponse.json({ success: false, error: "Admin yetkisi yapılandırılmamış." }, { status: 500 });
+    }
     if (adminKey !== requiredKey) {
       return NextResponse.json({ success: false, error: "Yetkisiz erişim." }, { status: 401 });
     }

@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Eczane+
 
-## Getting Started
+Eczane+ (Nöbetçi+), Türkiye genelindeki nöbetçi eczaneleri en hızlı, reklamsız ve sade biçimde kullanıcıya sunmayı hedefleyen modern bir web uygulamasıdır.
 
-First, run the development server:
+## Ürün Vizyonu
+Geleneksel nöbetçi eczane bulma süreçleri karmaşık reklamlar, yavaş yüklenen haritalar ve güvensiz tasarımlarla doludur. Eczane+, "Acil Rota Ekranı" felsefesiyle tasarlanmıştır.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Sade ve Reklamsız:** İlaç/indirim satışına değil, kullanıcının eczaneye en hızlı şekilde ulaşmasına odaklanır.
+- **Modüler Sağlayıcı Mimarisi:** İzmir Açık Veri Portalı, CollectAPI, Supabase ve Mock Data katmanları sayesinde hiçbir zaman boş ekran göstermez. En güvenilir kaynaktan veri çeker.
+- **Hızlı UX:** Kullanıcı cihazından aldığı konumla anında en yakın 3 eczaneyi gösterir. İstenirse Türkiye geneli il/ilçe seçimi sunar.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Kurulum ve Çalıştırma
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Gereksinimler
+- Node.js (v18+)
+- npm veya yarn
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Adımlar
 
-## Learn More
+1. Depoyu klonlayın ve bağımlılıkları yükleyin:
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. Environment değişkenlerini ayarlayın:
+   `.env.example` dosyasını kopyalayarak `.env.local` oluşturun.
+   ```bash
+   cp .env.example .env.local
+   ```
+   *Not: Uygulama API anahtarları eksik olsa dahi `MockProvider` ile demo veriler üzerinden çalışmaya devam eder.*
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Geliştirme sunucusunu başlatın:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Mimari Yapı
 
-## Deploy on Vercel
+Veri sağlayıcı (Provider) mimarisi `lib/providers/` altında bulunur:
+1. `IzmirProvider` (Öncelik: 10) - Resmi İzmir Büyükşehir verisi.
+2. `CollectApiProvider` (Öncelik: 20) - Ticari tüm Türkiye verisi (Anahtar gerektirir).
+3. `SupabaseProvider` (Öncelik: 30) - Önbelleğe alınmış/yedeklenmiş veritabanı verisi.
+4. `MockProvider` (Öncelik: 100) - Fallback demo verisi.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Güvenlik
+- API Raporlama Endpointleri (`/api/reports`) sıkı kimlik doğrulamasına (`ADMIN_SECRET_KEY`) sahiptir. Key olmadan endpoint çalışmaz ve 500 döner.
+- Kullanıcıların konum verisi hiçbir şekilde uzak sunucularda saklanmaz, açık rıza ile hata bildirimine eklenir.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## SEO
+Dinamik rotalar ile `/[city]/nobetci-eczane` sayfası SEO dostu linkleme yapısına imkan sağlar.
+
+---
+Mevcut kod standartlarını geliştirmeye yönelik her türlü katkıya (PR) açığız.

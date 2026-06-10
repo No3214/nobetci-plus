@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Pharmacy } from "@/types/pharmacy";
 import PharmacyCard from "@/components/PharmacyCard";
 import CityDistrictPicker from "@/components/CityDistrictPicker";
-import AdBanner from "@/components/AdBanner";
 import KvkkBanner from "@/components/KvkkBanner";
 import KvkkModal from "@/components/KvkkModal";
 import OnboardingFlow from "@/components/OnboardingFlow";
@@ -77,11 +76,11 @@ export default function Home() {
               <span className="text-xl font-bold text-white leading-none">+</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-neutral-100 flex items-center gap-1.5">
-                Nöbetçi<span className="text-emerald-500 font-extrabold">+</span>
+              <h1 className="text-xl font-black tracking-tight text-neutral-100 flex items-center gap-1.5">
+                Eczane<span className="text-emerald-500">+</span>
               </h1>
-              <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest leading-none">
-                Sade & Reklamsız
+              <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest leading-none mt-0.5">
+                En yakın nöbetçi eczaneye tek dokunuş.
               </p>
             </div>
           </div>
@@ -137,9 +136,9 @@ export default function Home() {
               <div className="flex justify-center mb-1">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
               </div>
-              <h4 className="text-xs font-bold text-amber-200">Konum İzni Alınamadı</h4>
+              <h4 className="text-xs font-bold text-amber-200">Konum alamadık.</h4>
               <p className="mt-1 text-[11px] text-neutral-400 leading-normal">
-                En yakın eczaneleri görmek için cihazınızdan konum izni verin veya aşağıdaki formdan il/ilçe seçin.
+                İl/ilçe seçerek devam edebilirsin veya tekrar konum izni isteyebilirsin.
               </p>
               <button
                 onClick={handleRequestLocation}
@@ -223,6 +222,15 @@ export default function Home() {
               <PharmacyCard pharmacy={pharmacy} index={index} elderMode={elderMode} />
             </motion.div>
           ))}
+          
+          {pharmacies.length > 3 && (
+            <button
+               onClick={() => setShowPicker(true)} // Or implement a 'showAll' state
+               className="w-full py-3 rounded-2xl bg-neutral-900 border border-neutral-800 text-xs font-bold text-neutral-400 hover:text-white transition"
+            >
+              Tüm Eczaneleri Göster ({pharmacies.length})
+            </button>
+          )}
 
           {/* Empty state when no pharmacies found */}
           {!loading && pharmacies.length === 0 && !error && (
@@ -239,7 +247,7 @@ export default function Home() {
 
         {/* Google AdSense or Custom Sponsorship Banner */}
         <div className="mt-6">
-          <AdBanner slot="1234567890" />
+
         </div>
 
 

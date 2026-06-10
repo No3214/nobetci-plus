@@ -100,7 +100,7 @@ export default function GraphPanel({ reportsCount, activeUsers = 124, uberClicks
         
         <div className="flex items-center gap-2 mt-auto">
           <TrendingUp className="h-4 w-4 text-emerald-400" />
-          <span className="text-xs font-bold text-emerald-400">+%12 Düne göre artış</span>
+          <span className="text-xs font-bold text-neutral-500">(Demo Veri)</span>
         </div>
       </motion.div>
 

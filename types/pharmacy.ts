@@ -11,6 +11,12 @@ export interface Pharmacy {
   confidence_score?: number; // Accuracy level out of 100
   updated_at?: string; // Last updated timestamp
   surplus_items?: { id: string; name: string; discount_badge?: string; price?: string }[];
+  // Provider Metadata
+  source?: string;
+  source_label?: string;
+  source_updated_at?: string;
+  is_live?: boolean;
+  warning_message?: string;
 }
 
 export interface Report {

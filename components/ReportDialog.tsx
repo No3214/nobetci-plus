@@ -32,9 +32,12 @@ export default function ReportDialog({
   const [isSuccess, setIsSuccess] = useState(false);
   const [coords, setCoords] = useState<{ lat?: number; lng?: number }>({});
 
-  useEffect(() => {
-    // Attempt to grab current coordinates silently for admin validation
-    if (isOpen && navigator.geolocation) {
+  const [allowLocation, setAllowLocation] = useState(false);
+
+  const handleLocationToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setAllowLocation(checked);
+    if (checked && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setCoords({
@@ -42,11 +45,16 @@ export default function ReportDialog({
             lng: pos.coords.longitude
           });
         },
-        () => {},
+        () => {
+          setAllowLocation(false);
+          alert("Konum alınamadı. Lütfen tarayıcı izinlerinizi kontrol edin.");
+        },
         { enableHighAccuracy: true }
       );
+    } else if (!checked) {
+      setCoords({});
     }
-  }, [isOpen]);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -199,6 +207,20 @@ export default function ReportDialog({
                       />
                     </motion.div>
                   )}
+
+                  {/* Explicit Consent for Location */}
+                  <div className="mt-4 flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      id="allowLocation"
+                      checked={allowLocation}
+                      onChange={handleLocationToggle}
+                      className="mt-1 h-4 w-4 rounded border-neutral-700 bg-neutral-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-neutral-900"
+                    />
+                    <label htmlFor="allowLocation" className="text-xs text-neutral-400 leading-tight">
+                      Hata doğrulaması için mevcut konumumun gönderilmesine izin veriyorum. (İsteğe bağlı)
+                    </label>
+                  </div>
 
                   {/* Action Buttons */}
                   <div className="mt-6 flex gap-3">
