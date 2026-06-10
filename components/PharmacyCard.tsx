@@ -232,11 +232,23 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
       </div>
 
       {/* Card Footer Actions */}
-      <div className="mt-4 flex justify-between items-center border-t border-neutral-800/40 pt-3">
-        <button
-          onClick={handleShare}
-          className={`inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 transition ${
-            elderMode ? "text-xs underline" : "text-[11px]"
+      <div className="mt-4 flex flex-col gap-3 border-t border-neutral-800/40 pt-3">
+        
+        {/* Affiliate / Monetization: Taxi/Uber */}
+        <a 
+          href={`https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${pharmacy.latitude}&dropoff[longitude]=${pharmacy.longitude}&dropoff[nickname]=${encodeURIComponent(pharmacy.name)}&client_id=AFFILIATE_NOBETCI_123`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-2 bg-neutral-950 border border-neutral-800 hover:bg-neutral-900 text-[11px] font-bold text-neutral-300 py-2.5 rounded-xl transition shadow-sm"
+        >
+          🚕 Eczaneye Taksi Çağır (Uber)
+        </a>
+
+        <div className="flex justify-between items-center">
+          <button
+            onClick={handleShare}
+            className={`inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 transition ${
+              elderMode ? "text-xs underline" : "text-[11px]"
           }`}
         >
           <Share2 className="h-3.5 w-3.5" />
@@ -253,6 +265,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
           <AlertTriangle className="h-3.5 w-3.5" />
           Konum hatalı mı? Bildir
         </button>
+        </div>
       </div>
 
       {/* Dialog Sheets */}

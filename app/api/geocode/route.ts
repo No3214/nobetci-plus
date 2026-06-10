@@ -10,14 +10,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Eksik koordinat parametresi." }, { status: 400 });
     }
 
+    // Round coordinates to 4 decimal places (~11 meters accuracy) to maximize cache hits
+    // and prevent OSM Nominatim abuse
+    const roundedLat = parseFloat(lat).toFixed(4);
+    const roundedLng = parseFloat(lng).toFixed(4);
+
     // Call free OpenStreetMap Nominatim reverse geocoding API
     // We supply a custom User-Agent to satisfy OSM Nominatim Usage Policy
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=tr`,
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${roundedLat}&lon=${roundedLng}&accept-language=tr`,
       {
         headers: {
           "User-Agent": "NobetciPlus/1.0 (contact: nobetciplus@gmail.com)"
-        }
+        },
+        next: { revalidate: 86400 } // Cache reverse geocoding results for 24 hours
       }
     );
 
@@ -44,8 +50,9 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, address: resolvedAddress });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Geocoding proxy error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }

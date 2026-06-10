@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
     const city = searchParams.get("city");
     const district = searchParams.get("district");
 
-    let lat: number | undefined = latParam ? parseFloat(latParam) : undefined;
-    let lng: number | undefined = lngParam ? parseFloat(lngParam) : undefined;
+    const lat: number | undefined = latParam ? parseFloat(latParam) : undefined;
+    const lng: number | undefined = lngParam ? parseFloat(lngParam) : undefined;
 
     let pharmacies: Pharmacy[] = [];
 
@@ -62,17 +62,17 @@ export async function GET(request: NextRequest) {
       
       if (!error && data && data.length > 0) {
         // Map to Pharmacy type
-        pharmacies = data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          city: item.city,
-          district: item.district,
-          address: item.address,
-          phone: item.phone,
-          latitude: item.latitude,
-          longitude: item.longitude,
-          confidence_score: item.confidence_score ?? 100,
-          updated_at: item.source_updated_at ? new Date(item.source_updated_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "22:00"
+        pharmacies = data.map((item: Record<string, unknown>) => ({
+          id: item.id as string,
+          name: item.name as string,
+          city: item.city as string,
+          district: item.district as string,
+          address: item.address as string,
+          phone: item.phone as string,
+          latitude: item.latitude as number,
+          longitude: item.longitude as number,
+          confidence_score: (item.confidence_score as number) ?? 100,
+          updated_at: item.source_updated_at ? new Date(item.source_updated_at as string).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "22:00"
         }));
       }
     }
@@ -101,8 +101,9 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data: pharmacies });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in /api/pharmacies GET:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }

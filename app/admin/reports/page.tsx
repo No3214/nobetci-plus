@@ -20,7 +20,7 @@ import {
   Activity
 } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import GraphPanel from "@/components/GraphPanel";
 
 export default function AdminReports() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -32,17 +32,6 @@ export default function AdminReports() {
   const [adminKey, setAdminKey] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
-
-  // Load key from sessionStorage on mount
-  useEffect(() => {
-    const cachedKey = sessionStorage.getItem("nobetci-admin-key");
-    if (cachedKey) {
-      verifyAndFetch(cachedKey);
-    } else {
-      setIsAuthenticated(false);
-      setLoading(false);
-    }
-  }, []);
 
   const verifyAndFetch = async (key: string) => {
     setRefreshing(true);
@@ -79,6 +68,20 @@ export default function AdminReports() {
     }
   };
 
+  // Load key from sessionStorage on mount
+  useEffect(() => {
+    const cachedKey = sessionStorage.getItem("nobetci-admin-key");
+    if (cachedKey) {
+      verifyAndFetch(cachedKey);
+    } else {
+      setTimeout(() => {
+        setIsAuthenticated(false);
+        setLoading(false);
+      }, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminKey.trim()) return;
@@ -108,7 +111,7 @@ export default function AdminReports() {
       const data = await res.json();
       if (data.success) {
         setReports((prev) =>
-          prev.map((r) => (r.id === id ? { ...r, status: nextStatus as any } : r))
+          prev.map((r) => (r.id === id ? { ...r, status: nextStatus as "open" | "resolved" } : r))
         );
       }
     } catch (err) {
@@ -331,6 +334,9 @@ export default function AdminReports() {
             </button>
           </div>
         </header>
+
+        {/* Global Telemetry & Graphify Panel */}
+        <GraphPanel reportsCount={totalCount} activeUsers={1240} uberClicks={142} />
 
         {/* Analytics Section ("grapihyla güçlendir") */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">

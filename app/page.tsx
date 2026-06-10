@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pharmacy } from "@/types/pharmacy";
 import PharmacyCard from "@/components/PharmacyCard";
 import CityDistrictPicker from "@/components/CityDistrictPicker";
-import EmergencyCard from "@/components/EmergencyCard";
 import AdBanner from "@/components/AdBanner";
 import KvkkBanner from "@/components/KvkkBanner";
 import KvkkModal from "@/components/KvkkModal";
-import WelcomeScreen from "@/components/WelcomeScreen";
+import OnboardingFlow from "@/components/OnboardingFlow";
 import { MapPin, Navigation, RefreshCw, Compass, AlertTriangle, ShieldCheck, Glasses } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,7 +23,7 @@ export default function Home() {
   const [addressLoading, setAddressLoading] = useState(false);
   const [elderMode, setElderMode] = useState(false);
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
-  const [consentGranted, setConsentGranted] = useState<boolean | null>(null);
+  const [isAppReady, setIsAppReady] = useState(false);
   
   // Selected area fallback states
   const [selectedArea, setSelectedArea] = useState<{ city: string; district: string } | null>(null);
@@ -108,28 +107,14 @@ export default function Home() {
     }
   };
 
-  // Check consent on page mount
-  useEffect(() => {
-    const consent = localStorage.getItem("nobetci-kvkk-consent");
-    if (consent === "true") {
-      setConsentGranted(true);
+  const handleOnboardingComplete = (useGps: boolean) => {
+    setIsAppReady(true);
+    if (useGps) {
       requestLocation();
     } else {
-      setConsentGranted(false);
+      setGpsStatus("denied");
+      setShowPicker(true);
     }
-  }, []);
-
-  const handleAcceptGps = () => {
-    localStorage.setItem("nobetci-kvkk-consent", "true");
-    setConsentGranted(true);
-    requestLocation();
-  };
-
-  const handleContinueManual = () => {
-    localStorage.setItem("nobetci-kvkk-consent", "true");
-    setConsentGranted(true);
-    setGpsStatus("denied");
-    setShowPicker(true);
   };
 
   const handleManualSearch = (city: string, district: string) => {
@@ -139,25 +124,8 @@ export default function Home() {
     fetchPharmacies(undefined, undefined, city, district);
   };
 
-  if (consentGranted === null) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-800 border-t-emerald-500" />
-      </div>
-    );
-  }
-
-  if (consentGranted === false) {
-    return (
-      <>
-        <WelcomeScreen
-          onAcceptGps={handleAcceptGps}
-          onContinueManual={handleContinueManual}
-          onOpenPrivacy={() => setIsKvkkOpen(true)}
-        />
-        <KvkkModal isOpen={isKvkkOpen} onClose={() => setIsKvkkOpen(false)} />
-      </>
-    );
+  if (!isAppReady) {
+    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   }
 
   return (
@@ -328,10 +296,7 @@ export default function Home() {
           <AdBanner slot="1234567890" />
         </div>
 
-        {/* Emergency Info Hub */}
-        <div className="mt-4">
-          <EmergencyCard />
-        </div>
+
 
         {/* Action picker toggles / forms */}
         <div className="mt-6 space-y-4">

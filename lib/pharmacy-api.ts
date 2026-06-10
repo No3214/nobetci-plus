@@ -1,4 +1,28 @@
 import { Pharmacy } from "../types/pharmacy";
+import { z } from "zod";
+
+const IzmirPharmacySchema = z.object({
+  Adi: z.string(),
+  Ilce: z.string(),
+  Adres: z.string(),
+  Telefon: z.string().nullish().transform(val => val ?? ""),
+  Enlem: z.union([z.string(), z.number()]),
+  Boylam: z.union([z.string(), z.number()]),
+}).passthrough();
+
+const IzmirApiResponseSchema = z.array(IzmirPharmacySchema);
+
+const CollectApiPharmacySchema = z.object({
+  name: z.string(),
+  address: z.string(),
+  phone: z.string().nullish().transform(val => val ?? ""),
+  loc: z.string(),
+}).passthrough();
+
+const CollectApiResponseSchema = z.object({
+  success: z.boolean(),
+  result: z.array(CollectApiPharmacySchema).optional().default([]),
+}).passthrough();
 
 /**
  * Fetches live duty pharmacies directly from the Izmir Metropolitan Municipality Open Data API.
@@ -17,14 +41,15 @@ export async function fetchLiveIzmirPharmacies(district?: string): Promise<Pharm
     }
 
     const data = await res.json();
+    const parsed = IzmirApiResponseSchema.safeParse(data);
     
-    // The API returns an array of pharmacies
-    if (!data || !Array.isArray(data)) {
+    if (!parsed.success) {
+      console.warn("Izmir API shape changed or invalid:", parsed.error.format());
       return [];
     }
 
-    let pharmacies: Pharmacy[] = data.map((item: any, index: number) => {
-      const rawPhone = (item.Telefon || "").replace(/\D/g, "");
+    let pharmacies: Pharmacy[] = parsed.data.map((item, index: number) => {
+      const rawPhone = item.Telefon.replace(/\D/g, "");
       // Format phone into standardized Turkish phone string: 0 (232) XXX XX XX
       let formattedPhone = item.Telefon;
       if (rawPhone.length === 10 && rawPhone.startsWith("232")) {
@@ -83,21 +108,34 @@ export async function fetchCollectAPILivePharmacies(
 
     if (!res.ok) return [];
 
-    const result = await res.json();
-    if (!result.success || !Array.isArray(result.result)) return [];
+    const data = await res.json();
+    const parsed = CollectApiResponseSchema.safeParse(data);
 
-    return result.result.map((item: any, idx: number) => ({
-      id: `collectapi-${city}-${district}-${idx}`,
-      name: item.name.toLowerCase().includes("eczane") ? item.name : `${item.name} Eczanesi`,
-      city: city,
-      district: district,
-      address: item.address,
-      phone: item.phone,
-      latitude: parseFloat(item.loc.split(",")[0]),
-      longitude: parseFloat(item.loc.split(",")[1]),
-      confidence_score: 95,
-      updated_at: new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
-    }));
+    if (!parsed.success) {
+      console.warn("CollectAPI shape changed or invalid:", parsed.error.format());
+      return [];
+    }
+
+    if (!parsed.data.success) return [];
+
+    return parsed.data.result.map((item, idx: number) => {
+      const parts = item.loc.split(",");
+      const lat = parseFloat(parts[0] || "0");
+      const lng = parseFloat(parts[1] || "0");
+
+      return {
+        id: `collectapi-${city}-${district}-${idx}`,
+        name: item.name.toLowerCase().includes("eczane") ? item.name : `${item.name} Eczanesi`,
+        city: city,
+        district: district,
+        address: item.address,
+        phone: item.phone,
+        latitude: lat,
+        longitude: lng,
+        confidence_score: 95,
+        updated_at: new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+      };
+    });
   } catch (error) {
     console.error("Error in CollectAPI request:", error);
     return [];

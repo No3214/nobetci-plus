@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: "node", // Lightweight, node environment is perfect for pure helper math/string unit testing.
     globals: true,
+    exclude: ["node_modules", "dist", ".idea", ".git", ".cache", "tests/**"], // Exclude Playwright e2e tests
   },
   resolve: {
     alias: {

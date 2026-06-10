@@ -1,35 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Report } from "@/types/pharmacy";
-import fs from "fs";
-import path from "path";
-
-const REPORTS_FILE = path.join(process.cwd(), "reports.json");
-
 // Simple in-memory rate limiter for reports POST API
 const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
 const MAX_POST_LIMIT = 5; // max 5 reports per window
-
-function readLocalReports(): Report[] {
-  try {
-    if (fs.existsSync(REPORTS_FILE)) {
-      const data = fs.readFileSync(REPORTS_FILE, "utf-8");
-      return JSON.parse(data);
-    }
-  } catch (err) {
-    console.error("Error reading local reports:", err);
-  }
-  return [];
-}
-
-function writeLocalReports(reports: Report[]) {
-  try {
-    fs.writeFileSync(REPORTS_FILE, JSON.stringify(reports, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error writing local reports:", err);
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,27 +20,29 @@ export async function GET(request: NextRequest) {
         .order("created_at", { ascending: false });
 
       if (!error && data) {
-        const mapped: Report[] = data.map((item: any) => ({
-          id: item.id,
-          pharmacy_id: item.pharmacy_id,
-          pharmacy_name: item.pharmacies?.name ?? "Bilinmeyen Eczane",
-          report_type: item.report_type,
-          message: item.message,
-          user_latitude: item.user_latitude,
-          user_longitude: item.user_longitude,
-          status: item.status,
-          created_at: item.created_at
-        }));
+        const mapped: Report[] = data.map((item: Record<string, unknown>) => {
+          const ph = item.pharmacies as Record<string, unknown> | undefined;
+          return {
+            id: item.id as string,
+            pharmacy_id: item.pharmacy_id as string,
+            pharmacy_name: (ph?.name as string) ?? "Bilinmeyen Eczane",
+            report_type: item.report_type as string,
+            message: item.message as string | undefined,
+            user_latitude: item.user_latitude as number | undefined,
+            user_longitude: item.user_longitude as number | undefined,
+            status: item.status as "open" | "resolved",
+            created_at: item.created_at as string
+          };
+        });
         return NextResponse.json({ success: true, data: mapped });
       }
     }
 
-    // Fallback: Read from local JSON
-    const reports = readLocalReports();
-    return NextResponse.json({ success: true, data: reports });
-  } catch (error: any) {
+    return NextResponse.json({ success: false, error: "Veritabanı yapılandırılmamış." }, { status: 503 });
+  } catch (error: unknown) {
     console.error("Error in /api/reports GET:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
 
@@ -94,6 +71,11 @@ export async function POST(request: NextRequest) {
     // 2. Presence Checks
     if (!pharmacy_id || !report_type) {
       return NextResponse.json({ success: false, error: "Eksik parametre dolduruldu." }, { status: 400 });
+    }
+
+    // 2.5 Message Length Sanitization
+    if (message && message.length > 500) {
+      return NextResponse.json({ success: false, error: "Açıklama 500 karakterden uzun olamaz." }, { status: 400 });
     }
 
     // 3. Geolocation Validation (M2.2)
@@ -138,17 +120,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, data: newReport });
       }
       console.error("Supabase insert report error:", error);
+      return NextResponse.json({ success: false, error: "Veritabanı kayıt hatası." }, { status: 500 });
     }
 
-    // Fallback: Save to local JSON file
-    const reports = readLocalReports();
-    reports.unshift(newReport);
-    writeLocalReports(reports);
-
-    return NextResponse.json({ success: true, data: newReport });
-  } catch (error: any) {
+    return NextResponse.json({ success: false, error: "Veritabanı yapılandırılmamış." }, { status: 503 });
+  } catch (error: unknown) {
     console.error("Error in /api/reports POST:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
 
@@ -176,20 +155,13 @@ export async function PUT(request: NextRequest) {
       if (!error) {
         return NextResponse.json({ success: true });
       }
+      return NextResponse.json({ success: false, error: "Veritabanı güncelleme hatası." }, { status: 500 });
     }
 
-    // Fallback: Update local file
-    const reports = readLocalReports();
-    const idx = reports.findIndex((r) => r.id === id);
-    if (idx !== -1) {
-      reports[idx].status = status;
-      writeLocalReports(reports);
-      return NextResponse.json({ success: true });
-    }
-
-    return NextResponse.json({ success: false, error: "Report not found" }, { status: 404 });
-  } catch (error: any) {
+    return NextResponse.json({ success: false, error: "Veritabanı yapılandırılmamış." }, { status: 503 });
+  } catch (error: unknown) {
     console.error("Error in /api/reports PUT:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
