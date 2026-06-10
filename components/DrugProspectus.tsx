@@ -52,7 +52,7 @@ export default function DrugProspectus({ elderMode = false }: DrugProspectusProp
           placeholder="İlaç veya etken madde adı yazın (örn: Parol)..." 
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
-          className={`w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-9 pr-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors ${
+          className={`w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-9 pr-3 py-2 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 transition-all ${
             elderMode ? "text-base py-3" : "text-xs"
           }`}
         />
@@ -72,7 +72,7 @@ export default function DrugProspectus({ elderMode = false }: DrugProspectusProp
               <button
                 key={drug.id}
                 onClick={() => handleSelectQuick(drug)}
-                className={`bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 hover:border-emerald-500/30 text-neutral-300 hover:text-emerald-400 rounded-lg px-2.5 py-1.5 transition ${
+                className={`bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 hover:border-emerald-500/30 text-neutral-300 hover:text-emerald-400 rounded-lg px-2.5 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-1 focus-visible:ring-offset-neutral-900 transition ${
                   elderMode ? "text-sm font-bold" : "text-[10px] font-semibold"
                 }`}
               >

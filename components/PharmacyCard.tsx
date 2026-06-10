@@ -167,7 +167,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
 
       {/* Dynamic Medication Stock inquiry box (Consumer pain point) */}
       {!elderMode && (
-        <div className="mt-3 bg-neutral-950/40 rounded-xl p-2.5 border border-neutral-800/40 flex items-center gap-2">
+        <div className="mt-3 bg-neutral-950/40 rounded-xl p-2.5 border border-neutral-800/40 flex items-center gap-2 focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/30 transition-all">
           <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wide shrink-0">💊 İlaç Sor:</span>
           <input
             type="text"
@@ -194,7 +194,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
         {/* Yol Tarifi */}
         <button
           onClick={() => setIsMapOpen(true)}
-          className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl text-white active:scale-95 transition-all ${
+          className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 transition-all ${
             elderMode 
               ? "bg-emerald-500 border border-white py-5 shadow-none hover:bg-emerald-400" 
               : "bg-emerald-600/90 py-3.5 hover:bg-emerald-500 shadow-md shadow-emerald-900/10"
@@ -207,7 +207,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
         {/* Ara */}
         <a
           href={getPhoneUrl(pharmacy.phone)}
-          className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl active:scale-95 transition-all ${
+          className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 transition-all ${
             elderMode 
               ? "bg-white text-black border border-black py-5 shadow-none hover:bg-neutral-100" 
               : "bg-neutral-800 text-neutral-100 border border-neutral-700/50 py-3.5 hover:bg-neutral-700"
@@ -222,7 +222,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
           href={getCustomWhatsappUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl active:scale-95 transition-all ${
+          className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 transition-all ${
             elderMode 
               ? "bg-black text-emerald-400 border-2 border-emerald-400 py-5 shadow-none hover:bg-neutral-900" 
               : "bg-neutral-800 text-neutral-100 border border-neutral-700/50 py-3.5 hover:bg-neutral-700"
@@ -242,7 +242,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
             href={`https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${pharmacy.latitude}&dropoff[longitude]=${pharmacy.longitude}&dropoff[nickname]=${encodeURIComponent(pharmacy.name)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[10px] text-neutral-500 hover:text-neutral-400 underline decoration-neutral-700 underline-offset-4 transition"
+            className="text-[10px] text-neutral-500 hover:text-neutral-400 underline decoration-neutral-700 underline-offset-4 focus-visible:outline-none focus-visible:text-neutral-300 transition"
           >
             🚕 (Opsiyonel) Taksi Çağır
           </a>
@@ -251,7 +251,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
         <div className="flex justify-between items-center">
           <button
             onClick={handleShare}
-            className={`inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 transition ${
+            className={`inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 focus-visible:outline-none focus-visible:underline focus-visible:text-emerald-300 transition ${
               elderMode ? "text-xs underline" : "text-[11px]"
           }`}
         >
@@ -260,7 +260,7 @@ export default function PharmacyCard({ pharmacy, index, elderMode = false }: Pha
         </button>
         <button
           onClick={() => setIsReportOpen(true)}
-          className={`inline-flex items-center gap-1 font-bold transition ${
+          className={`inline-flex items-center gap-1 font-bold focus-visible:outline-none focus-visible:underline focus-visible:text-amber-400 transition ${
             elderMode 
               ? "text-xs text-white underline hover:text-amber-400" 
               : "text-[11px] text-neutral-500 hover:text-amber-400"

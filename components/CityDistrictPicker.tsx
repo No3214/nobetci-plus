@@ -61,7 +61,7 @@ export default function CityDistrictPicker({
           <select
             value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
-            className="w-full rounded-2xl border border-neutral-800 bg-neutral-800/60 p-3.5 text-sm font-medium text-white focus:border-emerald-500 focus:outline-none transition"
+            className="w-full rounded-2xl border border-neutral-800 bg-neutral-800/60 p-3.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 transition"
           >
             <option value="" disabled className="text-neutral-500">
               İl seçin...
@@ -83,7 +83,7 @@ export default function CityDistrictPicker({
             value={selectedDistrict}
             disabled={!selectedCity}
             onChange={(e) => setSelectedDistrict(e.target.value)}
-            className="w-full rounded-2xl border border-neutral-800 bg-neutral-800/60 p-3.5 text-sm font-medium text-white focus:border-emerald-500 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-2xl border border-neutral-800 bg-neutral-800/60 p-3.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="" disabled className="text-neutral-500">
               İlçe seçin...
@@ -100,7 +100,7 @@ export default function CityDistrictPicker({
       <button
         type="submit"
         disabled={!selectedCity || !selectedDistrict}
-        className="mt-4 w-full rounded-2xl bg-emerald-600/90 py-3.5 text-sm font-bold text-white hover:bg-emerald-500 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="mt-4 w-full rounded-2xl bg-emerald-600/90 py-3.5 text-sm font-bold text-white hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         <Search className="h-4 w-4" /> Eczaneleri Listele
       </button>
