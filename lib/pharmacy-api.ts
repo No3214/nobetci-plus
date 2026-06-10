@@ -63,8 +63,8 @@ export async function fetchLiveIzmirPharmacies(district?: string): Promise<Pharm
         district: item.Ilce.trim(),
         address: item.Adres,
         phone: formattedPhone,
-        latitude: parseFloat(item.Enlem),
-        longitude: parseFloat(item.Boylam),
+        latitude: typeof item.Enlem === "number" ? item.Enlem : parseFloat(String(item.Enlem)),
+        longitude: typeof item.Boylam === "number" ? item.Boylam : parseFloat(String(item.Boylam)),
         confidence_score: 99, // Municipal verified
         updated_at: new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
       };
